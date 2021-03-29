@@ -1,0 +1,22 @@
+{% extends 'mainbase.html' %}
+{% block head %}
+  
+{% endblock %}
+ 
+{% block content %}
+<div class="jumbotron col-lg-8 offset-4">
+    <h3 style="background-color:#ffe6e6">You have an active booking.<br>
+    You are  parking your Vehicle (id:<strong> {{vehicleid}}</strong>) <br>  
+    at Parking spot: <strong>{{slotid}} </strong><br>from<strong> {{stime}} </strong>
+    <br>If you have unparked your vehicle or unparking now, <br>please hit <strong>Vacate</strong> 
+    so that parking spot:  <strong>{{slotid}} </strong> <br>becomes available for other users.
+    </h3>
+    <form action="vacate" method="post">
+    {% csrf_token %}
+    <input type="hidden" value="{{slotid}}" name="slotid" />
+    <button class="btn btn-success" type="submit">Vacate</button>
+    </form>
+</div>
+
+
+{% endblock %}
