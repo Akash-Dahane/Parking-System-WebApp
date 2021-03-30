@@ -20,7 +20,8 @@
     /* Set gray background color and 100% height */
     .sidenav {
       background-color: #f1f1f1;
-      height: 670px;
+      min-height: 900px;
+      box-sizing:border-box;
       
     }
     .sidenav a{
@@ -77,7 +78,7 @@
 
 <div class="container-fluid">
   <div class="row content">
-    <div class="col-sm-2 sidenav hidden-xs" style="background-color:#dadada; font-color:white; ">
+    <div class="col-sm-1 sidenav hidden-xs" style="background-color:#dadada; font-color:white; ">
    
       <ul class="nav nav-pills nav-stacked">
         
@@ -90,7 +91,7 @@
       </ul><br>
     </div>
     <br>
-    
+    <div class="col-sm-1"></div>
     <div class="col-sm-10 text-center">
       {% block content %}
       {% endblock %}

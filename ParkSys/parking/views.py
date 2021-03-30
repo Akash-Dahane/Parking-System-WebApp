@@ -14,10 +14,11 @@ def home(request):
     uid=request.user
     hasbooking=ParkingInfo.objects.filter(userid=uid.id,isactive=True)
     if hasbooking.exists():
-        return render(request,'parkinginfo.html',{'vehicleid':hasbooking[0].vehicleid,'slotid':hasbooking[0].slotid.id,'stime':hasbooking[0].stime})
+        return render(request,'parkinginfo.html',{'vehicleid':hasbooking[0].vehicleid,'slotid':hasbooking[0].slotid.id,'stime':hasbooking[0].stime,'etime':hasbooking[0].etime})
     else:
         freespots= ParkingSpot.objects.filter(isoccupied=False)
-        return render(request,'home.html',{'freespots':freespots})
+        occupiedspots=ParkingInfo.objects.filter(isactive=True)
+        return render(request,'home.html',{'freespots':freespots,'occupiedspots':occupiedspots})
 def book(request):
     if request.method=='POST':
         slotid=request.POST['slotid']
@@ -27,16 +28,14 @@ def book(request):
         uid= request.POST['userid']
         userid=User.objects.get(id=uid)
 
-        fromtime=request.POST['fromtime']
-        fromdate=request.POST['fromdate']
-        ftime = fromdate + " " + fromtime
-        dateobj=datetime.strptime(ftime, "%Y-%m-%d %H:%M") + timedelta(minutes=10)
+        hourss=int(request.POST['hours'])
+        dateobj=datetime.now() + timedelta(minutes=10)
+        etimeobj=dateobj+timedelta(hours=hourss,minutes=10)
 
         #finaltime=dateobj.strftime("%d/%m/%Y %H:%M:%S")
         vehicleid= request.POST['vehicleid']
-        details=ParkingInfo(userid=userid,slotid=slot,stime=dateobj,vehicleid=vehicleid,isactive=True)
+        details=ParkingInfo(userid=userid,slotid=slot,stime=dateobj,etime=etimeobj,vehicleid=vehicleid,isactive=True)
         details.save()
-        
         return redirect('home')
     else:
         return redirect('home')
@@ -89,7 +88,19 @@ def update(request):
         return render(request,'conupdt.html')
 
 
-            
+def extendtime(request):
+    if request.method=='POST':
+        uid =request.user
+        slotid=request.POST['slotid']
+        hourss=int(request.POST['hours'])
+        print(slotid)
+        extndslot=ParkingSpot.objects.get(id=slotid)
+        exinfo=ParkingInfo.objects.get(slotid=extndslot,isactive=True)
+        exinfo.etime+=timedelta(hours=hourss)
+        exinfo.save()
+        return redirect('home')
+    else:
+        return redirect('home')          
             
             
             

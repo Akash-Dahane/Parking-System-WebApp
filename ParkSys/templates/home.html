@@ -5,7 +5,7 @@
  
 {% block content %}
 
-
+<div class="row">
 <h1>SPOTS AVAILABLE TO PARK</h1>
 {% for i in freespots %}
 <div class="jumbotron col-sm-3" style="background-color:rgb(250, 249, 246);margin-right:0.3em;">
@@ -29,9 +29,8 @@
           <br>
           <input name="userid" type="hidden" value="{{user.id}}" />
           <br>
-          <label >From Date-Time:</label>
-           <input type ='date' class="date"  name="fromdate" required/>
-           <input type ='time' class="time"  name="fromtime" required/>
+          <label >Parking hours:</label>
+           <input type ='number' class="integer"  name="hours" min="1" max="24" required/>
            <br>
            <label>Vehicle Id:</label>  
             <input type ='text'  name='vehicleid' required/>
@@ -64,5 +63,16 @@
   </div>
 </div>
 {% endfor %}
-
+</div>
+<div class="row">
+<h1>UNAVAILABLE PARKING SPOTS</h1>
+{% for z in occupiedspots %}
+<div class="jumbotron col-sm-3" style="background-color:#ffdede;margin-right:0.3em;">
+  <h2>ParkingSlot {{z.slotid.id}}</h2>
+  <h4>Available after:</h4>
+  <strong>{{z.etime}}</strong>
+  
+</div>
+{% endfor %}
+</div>
 {% endblock %}
