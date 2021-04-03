@@ -3,7 +3,7 @@ from .models import ParkingInfo,ParkingSpot
 from datetime import datetime,timedelta
 from django.contrib.auth.models import User,auth
 from django.contrib import messages
-
+from django.utils import timezone
 # Create your views here.
 def index(request):
     total=ParkingSpot.objects.all().count()

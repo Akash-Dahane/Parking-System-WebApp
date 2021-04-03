@@ -55,6 +55,7 @@
         {{i.directions}}
         </div>
         <div class="modal-footer">
+        <a class="btn btn-info"  href="http://maps.google.com/maps?saddr=25.429292,81.770054&daddr={{i.destination}}" target="_blank">Open in Google Maps</a>
           <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
           
         </div>
@@ -71,6 +72,13 @@
   <h2>ParkingSlot {{z.slotid.id}}</h2>
   <h4>Available after:</h4>
   <strong>{{z.etime}}</strong>
+  <br>
+  {% if user.is_superuser %}
+   <form action="vacate" method="post">
+    {% csrf_token %}
+    <input type="hidden" value="{{z.slotid.id}}" name="slotid" />
+    <button class="btn btn-success btn-lg" type="submit">Vacate</button>
+    {% endif %}
   
 </div>
 {% endfor %}
