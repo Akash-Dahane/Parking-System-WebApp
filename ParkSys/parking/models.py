@@ -17,6 +17,7 @@ class ParkingInfo(models.Model):
     etime = models.DateTimeField(null=True,blank=True)
     vehicleid=models.CharField(max_length=50)
     isactive=models.BooleanField()
+    notifid=models.IntegerField()
     def __str__(self):
         return f'Vehicle with id:{self.vehicleid} was parked from {self.stime} to {self.etime} at Parking spot: {self.slotid.id}'
 

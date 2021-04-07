@@ -1,9 +1,15 @@
 from django.shortcuts import render,redirect
+from django.http import HttpResponse
 from .models import ParkingInfo,ParkingSpot
 from datetime import datetime,timedelta
 from django.contrib.auth.models import User,auth
 from django.contrib import messages
 from django.utils import timezone
+from django.utils.timezone import make_aware
+from django.core.mail import send_mail
+import threading
+import time
+from django.conf import settings
 # Create your views here.
 def index(request):
     total=ParkingSpot.objects.all().count()
@@ -29,12 +35,14 @@ def book(request):
         userid=User.objects.get(id=uid)
 
         hourss=int(request.POST['hours'])
-        dateobj=datetime.now() + timedelta(minutes=10)
-        etimeobj=dateobj+timedelta(hours=hourss,minutes=10)
+        dateobj=make_aware(datetime.now()) + timedelta(minutes=5) #parking overhead
+        etimeobj=dateobj+timedelta(hours=hourss)
+        print(dateobj)
+        print(etimeobj)
 
         #finaltime=dateobj.strftime("%d/%m/%Y %H:%M:%S")
         vehicleid= request.POST['vehicleid']
-        details=ParkingInfo(userid=userid,slotid=slot,stime=dateobj,etime=etimeobj,vehicleid=vehicleid,isactive=True)
+        details=ParkingInfo(userid=userid,slotid=slot,stime=dateobj,etime=etimeobj,vehicleid=vehicleid,isactive=True,notifid=0)
         details.save()
         return redirect('home')
     else:
@@ -50,7 +58,7 @@ def vacate(request):
         undoslot.save()
         undoinfo=ParkingInfo.objects.get(slotid=undoslot,isactive=True)
         undoinfo.isactive=False
-        undoinfo.etime=datetime.now()+timedelta(minutes=10)
+        undoinfo.etime=make_aware(datetime.now())+timedelta(minutes=5)
         undoinfo.save()
         return redirect('home')
     else:
@@ -95,15 +103,71 @@ def extendtime(request):
         hourss=int(request.POST['hours'])
         print(slotid)
         extndslot=ParkingSpot.objects.get(id=slotid)
-        exinfo=ParkingInfo.objects.get(slotid=extndslot,isactive=True)
+        exinfo=ParkingInfo.objects.get(slotid=extndslot,isactive=True,notifid=0)
         exinfo.etime+=timedelta(hours=hourss)
         exinfo.save()
+        messages.info(request,'Time extension accepted.')
         return redirect('home')
     else:
-        return redirect('home')          
-            
-            
-            
+        return redirect('home')  
 
+def notifyadmin(sid):
+    subject ='Regarding Parking spot vacation'
+    msg= f'User did not vacate spot : {sid} even though duration ended and user was notified. Kindly take appropriate decision.'
+    to ='iit2019176@iiita.ac.in'
+    res =send_mail(subject,msg,settings.EMAIL_HOST_USER,[to])
+    if(res==1):
+        print('eMail success')
+        return 0
+    else:
+        print('eMail failure')
+        return 1
 
-    
+def notifyuser(emailid):
+    subject ='Vacate Parking Spot'
+    msg= 'Times up! Kindly vacate the parking Spot or Request extension'
+    to =emailid
+    res =send_mail(subject,msg,settings.EMAIL_HOST_USER,[to])
+    if(res==1):
+        print('eMail success')
+        return 0
+    else:
+        print('eMail failure')
+        return 1
+
+def checkin():
+    infolists=ParkingInfo.objects.filter(isactive=True)
+    for i in infolists:
+        ltime=i.etime
+        print('working') #all printfs are for testing purposes.
+        print(ltime)
+        print(make_aware(datetime.now()))
+        nowtime=make_aware(datetime.now())
+        tdiff=(ltime-nowtime).total_seconds()/60.0
+        print(nowtime+timedelta(minutes=tdiff)) # just to check time converts from utc to ist correctly
+        print(tdiff)        
+        if tdiff > 0 and tdiff < 10 and i.notifid == 0:
+            #user has less than 10 minutes left
+            print("under 10 minutes")
+            stat=notifyuser(i.userid.email)
+            if stat == 0:
+                obj=ParkingInfo.objects.get(userid=i.userid.id)
+                obj.notifid=1
+                obj.save()    
+        elif tdiff < 0 and tdiff < -5 and i.notifid == 1:
+            #user hasn't vacated yet. inform admin.
+            print("complain to admin")
+            stat=notifyadmin(i.slotid.id)
+            if stat == 0:
+                obj=ParkingInfo.objects.get(userid=i.userid.id,isactive=True)
+                obj.notifid=2
+                obj.save()
+        
+def checker():
+    while True:
+        checkin()
+        time.sleep(300)
+    #obj=ParkingInfo.objects.filter(isactive=True)
+    #print(obj)
+
+threading.Thread(target=checker,daemon=True).start() #just one extra thread to handle scheduled checkup of expiry timings

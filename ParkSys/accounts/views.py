@@ -42,7 +42,7 @@ def login(request):
             auth.login(request,user)
             return redirect('home')
         else:
-            messages.info(request,'Invalid credentials')
+            messages.info(request,'Invalid credentials. Enter correct password')
             return redirect('login')
     else:
         return render(request,'login.html')
